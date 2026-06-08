@@ -1,0 +1,24 @@
+database:
+  name: vs-crm-db
+  plan: free
+  databaseName: vs_crm_db
+  ipAllowList: []
+
+services:
+  - type: web
+    name: vs-crm
+    plan: free
+    branch: main
+    region: oregon
+    buildCommand: pnpm install && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vs-crm-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
