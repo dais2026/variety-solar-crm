@@ -9,7 +9,6 @@
 
 import mysql from "mysql2/promise";
 import { drizzle } from "drizzle-orm/mysql2";
-import * as schema from "./schema";
 
 // Database connection pool
 let pool: mysql.Pool | null = null;
@@ -43,15 +42,16 @@ export async function initDatabase(): Promise<void> {
 
     // Now connect to the database
     pool = mysql.createPool(config);
-    db = drizzle(pool, { schema });
 
     console.log("[DB] Connected to MySQL database");
 
     // Run migrations
     await runMigrations();
   } catch (error) {
-    console.error("[DB] Failed to connect to MySQL, using SQLite fallback");
-    await initSqliteFallback();
+    console.error("[DB] Failed to connect to MySQL:", error);
+    console.warn("[DB] Running without database - some features may not work");
+    pool = null;
+    db = null;
   }
 }
 
