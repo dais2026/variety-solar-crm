@@ -29,8 +29,14 @@ const AuthContext = createContext<AuthContextType | null>(null);
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Default mock user - CRM works without login
+  const [user, setUser] = useState<User | null>({
+    id: 1,
+    email: "demo@varietysolar.com",
+    name: "Demo User",
+    role: "admin",
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -47,11 +53,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userData = await response.json();
         setUser(userData);
       } else {
-        setUser(null);
+        // Keep default mock user
+        setUser({
+          id: 1,
+          email: "demo@varietysolar.com",
+          name: "Demo User",
+          role: "admin",
+        });
       }
     } catch (error) {
-      console.error("[Auth] Check error:", error);
-      setUser(null);
+      console.log("[Auth] Using demo mode - no backend");
+      // Keep default mock user
+      setUser({
+        id: 1,
+        email: "demo@varietysolar.com",
+        name: "Demo User",
+        role: "admin",
+      });
     } finally {
       setIsLoading(false);
     }
