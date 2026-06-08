@@ -1989,7 +1989,9 @@ packages:
     resolution: {integrity: sha512-hpz+8vFk3Ic2xssIA3e01R56jkmsAhvkQdXlEbRTk6S10xDAtiQiM3FyvZVGsucefq764euO/b8WUW9ysLdThHw==}
 
   '@tailwindcss/postcss@4.1.14':
-    resolution: {integrity: sha512-3sMNt+WXDfkCgh/8Lf+B8xNJcWgS2XuDrB1ZhCkeFoGcHOVSkBbHWRN3W6u5I5R5xY6KQpB0zI8w==, tarball: 'https://registry.npmjs.org/@tailwindcss/postcss/-/postcss-4.1.14.tgz'}
+    resolution: {integrity: 3sMNt+WXDfkCgh/8Lf+B8xNJcWgS2XuDrB1ZhCkeFoGcHOVSkBbHWRN3W6u5I5R5xY6KQpB0zI8w==}
+
+    dependencies:
     dependencies:
       '@alloc/quick-lru': 5.2.0
       '@tailwindcss/node': 4.1.14
@@ -6032,8 +6034,19 @@ snapshots:
 
   '@standard-schema/utils@0.3.0': {}
 
+  '@tailwindcss/node@4.1.14':
     resolution: {integrity: 3sMNt+WXDfkCgh/8Lf+B8xNJcWgS2XuDrB1ZhCkeFoGcHOVSkBbHWRN3W6u5I5R5xY6KQpB0zI8w==}
+
     dependencies:
+    dependencies:
+      '@jridgewell/remapping': 2.3.5
+      enhanced-resolve: 5.18.3
+      jiti: 2.6.1
+      lightningcss: 1.30.1
+      magic-string: 0.30.19
+      source-map-js: 1.2.1
+      tailwindcss: 4.1.14
+
   '@tailwindcss/oxide-android-arm64@4.1.14':
     optional: true
 
