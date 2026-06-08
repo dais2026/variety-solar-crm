@@ -1,0 +1,153 @@
+# Project TODO
+
+- [x] Basic CRM dashboard with live Google Sheets data
+- [x] Overview panel with KPIs and charts
+- [x] Leads table panel
+- [x] Pipeline panel with funnel
+- [x] Products panel with analytics
+- [x] Activity panel with timeline
+- [x] New Customer form with 3-step wizard
+- [x] Product Details dropdowns matching Google Sheets validation
+- [x] Price Calculator integration (iframe embed)
+- [x] Pylon Programme link in sidebar
+- [x] Brand alignment - Variety Solar colors, fonts, styling
+- [x] SMS Broadcast API integration - backend tRPC route for sending SMS
+- [x] SMS Panel UI component with individual and bulk send
+- [x] SMS message templates
+- [x] SMS credit balance display
+- [x] Add SMS tab to sidebar navigation
+- [x] Secure SMS procedures with protectedProcedure (auth required)
+- [x] Fix OAuth login - create users table via database migration
+- [x] Personalised bulk SMS - send individual messages with {name} replaced per recipient
+- [x] Add outcome status filter to SMS Bulk Send (e.g. "Awaiting Information") to quickly target leads by status
+- [x] SMS sent log stored in database (sent messages logged with direction, phone, message, parts, cost, status)
+- [x] Multi-part SMS support (up to 320 chars)
+- [x] Confirmation dialog before sending with cost estimate
+- [x] Fix SMS API URL from www.smsbroadcast.com.au to api.smsbroadcast.com.au
+- [x] Change sender ID to blank (use shared number pool) instead of alphanumeric VrietySolr
+- [x] Discovery Recording: database schema (recordings table with lead link, audio URL, transcript, AI summary)
+- [x] Discovery Recording: server-side file upload endpoint for audio files (S3 storage)
+- [x] Discovery Recording: auto-transcription via Whisper after upload
+- [x] Discovery Recording: AI summary extraction (system size, budget, roof type, objections, next steps)
+- [x] Discovery Recording: live in-browser recording via MediaRecorder API
+- [x] Discovery Recording: Voice Memo upload (drag-and-drop or file picker)
+- [x] Discovery Recording: per-lead recordings panel with playback, transcript, and summary display
+- [x] Discovery Recording: multiple recordings per lead support
+- [x] Add Electrification Profile section to expanded lead view (SVR, Rooftop Solar, Hot Water, Heating/Cooling, Cooktop, Product 2, VPP/Night Use, EV)
+- [x] Sort Leads panel by date (most recent first as default)
+- [x] Wire New Customer form to append rows to Google Sheets via Sheets API
+- [x] Add date range filtering to Leads panel (Today, This Week, Last 7 Days, Last 30 Days, All)
+- [x] Pin/highlight today's leads with visual badge or background colour
+- [x] Fix Notes column K display in expanded lead view (verified: notes parse correctly and render for Cody, Ciara, Simon)
+- [x] Closed Sale: database schema (closed_sales table with customer, system, financial, compliance, site fields)
+- [x] Closed Sale: backend tRPC procedures (create, list, getById, update)
+- [x] Closed Sale: auto-calculations (STC value, price per watt, balance due, days in pipeline)
+- [x] Closed Sale: "Close Deal" action button on lead expanded view
+- [x] Closed Sale: multi-step form UI (Customer Info, System Specs, Financials, Contract & Compliance, Site Details)
+- [x] Closed Sale: Closed Sales list view with summary cards/table
+- [x] Closed Sale: detail view for individual closed sales
+- [x] Closed Sale: sidebar navigation entry
+- [x] Closed Sale: workflow triggers (lock fields, notify owner, generate handoff checklist)
+- [x] Replace Product Demand Radar chart with a simpler, more readable horizontal bar chart
+- [x] Remove OAuth login requirement - make CRM fully public without authentication
+- [x] Display Customers Saved Pricing reference number in the Leads tab (expanded view)
+- [x] Fix CORS error: proxy Price Calculator API through CRM backend to avoid cross-origin blocking
+- [x] Show full quote breakdown (line items, STCs, rebates, total) in Leads expanded view like Price Calculator
+- [x] Add received/incoming SMS messages to the SMS Broadcast section
+- [x] Add flashing yellow notification dot on SMS Broadcast sidebar tab when unread received messages exist (stops when Received tab is opened)
+- [x] Add toast/banner notification when a new inbound SMS arrives (visible from any tab)
+- [x] Make Saved Pricing quotes collapsible/dropdown - show header (quote #, date, total) by default, expand to show line items on click
+- [x] Rename "Outcome" label to "Discovery" throughout the CRM UI (column headers, filters, sort options, expanded view)
+- [x] Add Discovery stage filter to Leads table (filter buttons/dropdown for each unique discovery value)
+- [x] Add delete action to Leads table (delete button per row with confirmation, removes lead from view)
+- [x] Fix delete lead to use soft delete (database-backed) instead of Google Sheets API token - leads hidden from view without needing token
+- [x] Update header title from "Leads May 2026 GF" to "VARIETY SOLAR CRM 2026"
+- [x] Add delete button to Discovery Recordings (with confirmation)
+- [x] Add visible date/time stamp to each recording entry
+- [x] Auto-SMS on "Called NPU" status: send templated message immediately, once per lead, with George's signature
+- [x] Add "Called - Left Voicemail" action button with separate SMS template and one-time tracking
+- [x] Add visual "SMS Sent" badge on leads that have received the NPU/Voicemail auto-SMS
+- [x] Add editable NPU/Voicemail message templates via Settings panel (stored in DB)
+- [x] Fix CSV parsing: replaced unreliable public CSV export with server-side Google Sheets API endpoint (all 25 leads now display correctly)
+- [x] Create Variety Solar - Discovery Google Form (17 questions, published, rebranded from Lightning Energy)
+- [x] Add "Missed Call" SMS template with Variety Solar branding, discovery form link, and signature footer
+- [x] Update NPU and Voicemail default templates with correct email (george@varietysolar.com.au) and signature format
+- [x] Increase SMS character limit to 765 chars (5 SMS parts) to accommodate templates with signatures
+- [x] Fix production token issue: switched getLeads to use public CSV export with proper parser (no auth token needed, works permanently in deployed environment)
+- [x] Add Calendly booking link (https://calendly.com/variety-solar/new-meeting) to SMS templates
+- [x] Add new "Book Consultation" SMS template with Calendly link
+- [x] Update Follow-up template with Calendly booking link
+- [x] Update Proposal Ready template with Calendly booking link
+- [x] Update Missed Call template with Calendly rescheduling link
+- [x] Add pagination to Leads panel (15 leads per page with Previous/Next controls)
+- [x] Implement heartbeat handler for auto-SMS on "Called NPU" status changes
+- [x] Deploy and create the actual heartbeat cron job (every 5 minutes) — task_uid: garZWErBGWihAS2PYdo8s7
+- [x] Build calendar invite feature: backend tRPC procedure to generate .ics and send via SMTP
+- [x] Build calendar invite feature: frontend scheduling panel on lead click
+- [x] Switch SMTP sender from DMS77@bigpond.com to george@varietysolar.com.au via Zoho Mail (smtppro.zoho.com, port 465, SSL)
+- [x] Auto-BCC george@varietysolar.com.au + fotios8548@gmail.com on all calendar invite emails so they auto-appear in Google Calendar
+- [x] Add customer address as default meeting location in .ics calendar invites (Google Calendar shows map link)
+- [x] Add "Meetings Sent" log: database table to store all sent meeting invites
+- [x] Add "Meetings Sent" log: backend tRPC procedures (list, getById)
+- [x] Add "Meetings Sent" log: sidebar navigation entry and UI panel with appointment history
+- [x] Add 24-hour meeting reminder: scheduled heartbeat job to email customers before their meeting
+- [x] Add 24-hour meeting reminder: reminder_sent tracking column to prevent duplicate sends
+- [x] Add 24-hour meeting reminder: Express handler at /api/scheduled/meetingReminder
+- [x] Add "Today's Meetings" widget to Overview panel showing upcoming appointments at a glance
+- [x] SMS Templates: Allow editing template title and message text inline
+- [x] SMS Templates: Allow saving edited templates to the database
+- [x] SMS Templates: Allow creating new custom templates
+- [x] SMS Templates: Allow deleting custom templates (built-in defaults are preserved)
+- [x] Remove "Product" column from Leads table view, keep Discovery
+- [x] Fix column mapping to match updated Google Sheet structure (column H = Discovery)
+- [x] Fix Sale Status colour coding: "Lost" shows dark grey, "Rejected" shows orange/amber - matches Google Sheet colours
+- [x] Auto-import Solar Quotes leads: IMAP connection to Zoho inbox to read incoming Solar Quotes emails
+- [x] Auto-import Solar Quotes leads: parse email body to extract lead details (name, email, phone, address, product interests, special instructions)
+- [x] Auto-import Solar Quotes leads: write parsed lead data to Google Sheet in correct column format
+- [x] Auto-import Solar Quotes leads: heartbeat cron job (every 15 minutes) to check for new emails
+- [x] Auto-import Solar Quotes leads: deduplication to avoid importing the same lead twice
+- [x] Auto-import Solar Quotes leads: store IMAP credentials as environment secrets
+- [x] Solar Quotes Imports log panel: backend tRPC procedure to list imported leads
+- [x] Solar Quotes Imports log panel: frontend UI with table showing imported lead name, email, phone, date, lead ref
+- [x] Solar Quotes Imports log panel: sidebar navigation entry
+- [x] Extend email parser: refactor into generic multi-source framework supporting Solar Quotes and future lead sources
+- [x] Extend email parser: add support for detecting and parsing other common lead email formats
+- [x] Create the 15-minute heartbeat cron job for Solar Quotes import (post-deployment)
+- [x] CRM Leads panel: expandable transcript dropdown per lead showing full Solar Quotes email details
+- [x] Store full email transcripts in database (lead_transcripts table)
+- [x] tRPC endpoint to retrieve transcript by lead name/email
+- [x] Backfill existing leads with full transcripts from Sales folder emails
+- [x] Update automated import to also store full transcript for new leads
+- [x] Auto-import: scan Sales IMAP folder in addition to INBOX for Solar Quotes emails
+- [x] Solar Quotes panel: add Manual Import button to trigger immediate inbox check on demand
+- [x] Solar Quotes panel: manual import backend tRPC procedure (calls the import logic directly)
+- [x] AI Call Prep Notes: generate talking points from transcript data using LLM
+- [x] AI Call Prep Notes: display in expanded lead view as collapsible section
+- [x] AI Call Prep Notes: store generated notes in database to avoid re-generation
+- [x] Email open tracking: database schema (email_tracking table with tracking ID, lead name, email subject, recipient, sent timestamp)
+- [x] Email open tracking: email_opens table to log each open event (timestamp, IP, user agent)
+- [x] Email open tracking: transparent 1x1 pixel endpoint (/api/track/:trackingId.png) that logs opens
+- [x] Email open tracking: embed tracking pixel in meeting invite and reminder emails
+- [x] Email open tracking: owner notification when customer opens email + sidebar badge indicator
+- [x] Email open tracking: "Email Tracking" panel with open history timeline (per-email open events with timestamp, device, IP)
+- [x] Fix: IMAP OR search crash with 3+ subjects (nested OR for multiple criteria)
+- [x] Fix: Solar Quotes import saves lead to DB before Sheets write (Sheets is now best-effort)
+- [x] Fix: Import error surfacing - show error/warning toast when Sheets writes fail
+- [x] Fix: Refresh button now invalidates emailTracking and solarQuotes queries (not just sheets)
+- [x] Fix: Refresh button spinner not visible - added local isRefreshing state with 2s minimum display + "Refreshing..." text feedback
+- [x] Send Tracked Email: tRPC procedure to send email via SMTP with automatic tracking pixel embedding
+- [x] Send Tracked Email: email templates (follow-up after quote, proposal attached, checking in, custom)
+- [x] Send Tracked Email: Compose Email dialog UI with recipient, subject, body, template selector
+- [x] Send Tracked Email: integrate compose dialog into CRM (accessible from sidebar or lead rows)
+- [x] Send Tracked Email: sent emails appear in Email Tracking tab with open tracking
+- [x] Send Tracked Email: vitest tests for the send email procedure
+- [x] Fix: Rejected status badge colour changed from amber to red (#EF4444) across all panels
+- [x] Fix: Google Sheets token expiry - centralized getGoogleToken() in env.ts with fallback chain (GOOGLE_DRIVE_TOKEN → GOOGLE_WORKSPACE_CLI_TOKEN → GOOGLE_SHEETS_TOKEN)
+- [x] Fix: Updated sheets.ts and scheduledSolarQuotes.ts to use centralized getGoogleToken
+- [x] Fix: Backfilled 4 missing leads to Google Sheet (Paul Anderson, Simon Jones, Joydip Ghosh, Jordan Manie)
+- [x] Fix: Cleaned up ~442 empty/placeholder rows from Google Sheet (rows with only "Solar Quotes" and dashes)
+- [x] Fix: Updated sheetsToken.test.ts to use centralized getGoogleToken (tests token fallback chain)
+- [x] Add sheetWritten flag to solar_quotes_imports table to track sheet-write status
+- [x] Add retry logic (3 attempts with backoff) to appendLeadToSheet
+- [x] Add owner notification when sheet-write fails after retries
+- [x] Add reconciliation endpoint to re-sync DB leads missing from sheet

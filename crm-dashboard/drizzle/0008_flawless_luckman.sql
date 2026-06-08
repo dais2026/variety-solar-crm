@@ -1,0 +1,1 @@
+ALTER TABLE `meetings_sent` ADD `reminderSent` enum('yes','no') DEFAULT 'no' NOT NULL;
