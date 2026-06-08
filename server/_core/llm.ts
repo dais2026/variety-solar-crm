@@ -1,327 +1,332 @@
-/**
- * Standalone OpenAI Integration - Replaces Manus Forge API
- * 
- * Features:
- * - Chat completion with function calling
- * - Whisper API for transcription
- * - Text-to-speech for voice responses
- */
+import { ENV } from "./env";
 
-import OpenAI from "openai";
+export type Role = "system" | "user" | "assistant" | "tool" | "function";
 
-// Configuration
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const LLM_MODEL = process.env.LLM_MODEL || "gpt-4o-mini";
-const WHISPER_MODEL = "whisper-1";
-const TTS_MODEL = "tts-1";
+export type TextContent = {
+  type: "text";
+  text: string;
+};
 
-// Initialize OpenAI client
-const openai = OPENAI_API_KEY
-  ? new OpenAI({ apiKey: OPENAI_API_KEY })
-  : null;
+export type ImageContent = {
+  type: "image_url";
+  image_url: {
+    url: string;
+    detail?: "auto" | "low" | "high";
+  };
+};
 
-// Types
-export interface LLMMessage {
-  role: "system" | "user" | "assistant" | "function";
-  content: string;
+export type FileContent = {
+  type: "file_url";
+  file_url: {
+    url: string;
+    mime_type?: "audio/mpeg" | "audio/wav" | "application/pdf" | "audio/mp4" | "video/mp4" ;
+  };
+};
+
+export type MessageContent = string | TextContent | ImageContent | FileContent;
+
+export type Message = {
+  role: Role;
+  content: MessageContent | MessageContent[];
   name?: string;
-  function_call?: {
+  tool_call_id?: string;
+};
+
+export type Tool = {
+  type: "function";
+  function: {
+    name: string;
+    description?: string;
+    parameters?: Record<string, unknown>;
+  };
+};
+
+export type ToolChoicePrimitive = "none" | "auto" | "required";
+export type ToolChoiceByName = { name: string };
+export type ToolChoiceExplicit = {
+  type: "function";
+  function: {
+    name: string;
+  };
+};
+
+export type ToolChoice =
+  | ToolChoicePrimitive
+  | ToolChoiceByName
+  | ToolChoiceExplicit;
+
+export type InvokeParams = {
+  messages: Message[];
+  tools?: Tool[];
+  toolChoice?: ToolChoice;
+  tool_choice?: ToolChoice;
+  maxTokens?: number;
+  max_tokens?: number;
+  outputSchema?: OutputSchema;
+  output_schema?: OutputSchema;
+  responseFormat?: ResponseFormat;
+  response_format?: ResponseFormat;
+};
+
+export type ToolCall = {
+  id: string;
+  type: "function";
+  function: {
     name: string;
     arguments: string;
   };
-}
+};
 
-export interface FunctionCallResult {
-  functionName: string;
-  arguments: Record<string, any>;
-}
+export type InvokeResult = {
+  id: string;
+  created: number;
+  model: string;
+  choices: Array<{
+    index: number;
+    message: {
+      role: Role;
+      content: string | Array<TextContent | ImageContent | FileContent>;
+      tool_calls?: ToolCall[];
+    };
+    finish_reason: string | null;
+  }>;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+};
 
-export interface CompletionOptions {
-  model?: string;
-  temperature?: number;
-  maxTokens?: number;
-  systemPrompt?: string;
-  tools?: any[];
-  toolChoice?: any;
-}
+export type JsonSchema = {
+  name: string;
+  schema: Record<string, unknown>;
+  strict?: boolean;
+};
 
-export interface TranscriptionResult {
-  text: string;
-  language?: string;
-  duration?: number;
-}
+export type OutputSchema = JsonSchema;
 
-export interface SpeechOptions {
-  voice?: string;
-  speed?: number;
-  model?: string;
-}
+export type ResponseFormat =
+  | { type: "text" }
+  | { type: "json_object" }
+  | { type: "json_schema"; json_schema: JsonSchema };
 
-// Available voices for TTS
-export const TTS_VOICES = {
-  alloy: "alloy",
-  echo: "echo",
-  fable: "fable",
-  onyx: "onyx",
-  nova: "nova",
-  shimmer: "shimmer",
-} as const;
+const ensureArray = (
+  value: MessageContent | MessageContent[]
+): MessageContent[] => (Array.isArray(value) ? value : [value]);
 
-// Default system prompt for CRM assistant
-const DEFAULT_SYSTEM_PROMPT = `You are a helpful CRM assistant for a solar energy company called Variety Solar.
-Your role is to help sales staff with:
-- Lead qualification and follow-up
-- Call script suggestions
-- Customer objection handling
-- Product information
-- Scheduling appointments
-
-Be professional, concise, and helpful. Always be honest if you don't know something.
-Do not make up information about pricing, warranties, or technical specifications without verification.`;
-
-// Check if OpenAI is configured
-export function isConfigured(): boolean {
-  return !!OPENAI_API_KEY;
-}
-
-// Chat completion with optional function calling
-export async function createCompletion(
-  messages: LLMMessage[],
-  options: CompletionOptions = {}
-): Promise<string> {
-  if (!openai) {
-    throw new Error("OpenAI API key not configured. Set OPENAI_API_KEY in .env");
+const normalizeContentPart = (
+  part: MessageContent
+): TextContent | ImageContent | FileContent => {
+  if (typeof part === "string") {
+    return { type: "text", text: part };
   }
 
+  if (part.type === "text") {
+    return part;
+  }
+
+  if (part.type === "image_url") {
+    return part;
+  }
+
+  if (part.type === "file_url") {
+    return part;
+  }
+
+  throw new Error("Unsupported message content part");
+};
+
+const normalizeMessage = (message: Message) => {
+  const { role, name, tool_call_id } = message;
+
+  if (role === "tool" || role === "function") {
+    const content = ensureArray(message.content)
+      .map(part => (typeof part === "string" ? part : JSON.stringify(part)))
+      .join("\n");
+
+    return {
+      role,
+      name,
+      tool_call_id,
+      content,
+    };
+  }
+
+  const contentParts = ensureArray(message.content).map(normalizeContentPart);
+
+  // If there's only text content, collapse to a single string for compatibility
+  if (contentParts.length === 1 && contentParts[0].type === "text") {
+    return {
+      role,
+      name,
+      content: contentParts[0].text,
+    };
+  }
+
+  return {
+    role,
+    name,
+    content: contentParts,
+  };
+};
+
+const normalizeToolChoice = (
+  toolChoice: ToolChoice | undefined,
+  tools: Tool[] | undefined
+): "none" | "auto" | ToolChoiceExplicit | undefined => {
+  if (!toolChoice) return undefined;
+
+  if (toolChoice === "none" || toolChoice === "auto") {
+    return toolChoice;
+  }
+
+  if (toolChoice === "required") {
+    if (!tools || tools.length === 0) {
+      throw new Error(
+        "tool_choice 'required' was provided but no tools were configured"
+      );
+    }
+
+    if (tools.length > 1) {
+      throw new Error(
+        "tool_choice 'required' needs a single tool or specify the tool name explicitly"
+      );
+    }
+
+    return {
+      type: "function",
+      function: { name: tools[0].function.name },
+    };
+  }
+
+  if ("name" in toolChoice) {
+    return {
+      type: "function",
+      function: { name: toolChoice.name },
+    };
+  }
+
+  return toolChoice;
+};
+
+const resolveApiUrl = () =>
+  ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
+    ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
+    : "https://forge.manus.im/v1/chat/completions";
+
+const assertApiKey = () => {
+  if (!ENV.forgeApiKey) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+};
+
+const normalizeResponseFormat = ({
+  responseFormat,
+  response_format,
+  outputSchema,
+  output_schema,
+}: {
+  responseFormat?: ResponseFormat;
+  response_format?: ResponseFormat;
+  outputSchema?: OutputSchema;
+  output_schema?: OutputSchema;
+}):
+  | { type: "json_schema"; json_schema: JsonSchema }
+  | { type: "text" }
+  | { type: "json_object" }
+  | undefined => {
+  const explicitFormat = responseFormat || response_format;
+  if (explicitFormat) {
+    if (
+      explicitFormat.type === "json_schema" &&
+      !explicitFormat.json_schema?.schema
+    ) {
+      throw new Error(
+        "responseFormat json_schema requires a defined schema object"
+      );
+    }
+    return explicitFormat;
+  }
+
+  const schema = outputSchema || output_schema;
+  if (!schema) return undefined;
+
+  if (!schema.name || !schema.schema) {
+    throw new Error("outputSchema requires both name and schema");
+  }
+
+  return {
+    type: "json_schema",
+    json_schema: {
+      name: schema.name,
+      schema: schema.schema,
+      ...(typeof schema.strict === "boolean" ? { strict: schema.strict } : {}),
+    },
+  };
+};
+
+export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
+  assertApiKey();
+
   const {
-    model = LLM_MODEL,
-    temperature = 0.7,
-    maxTokens = 2000,
-    systemPrompt = DEFAULT_SYSTEM_PROMPT,
+    messages,
     tools,
     toolChoice,
-  } = options;
+    tool_choice,
+    outputSchema,
+    output_schema,
+    responseFormat,
+    response_format,
+  } = params;
 
-  // Prepare messages with system prompt
-  const preparedMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-    { role: "system", content: systemPrompt },
-    ...messages.map((m) => ({
-      role: m.role as "user" | "assistant" | "system",
-      content: m.content,
-      name: m.name,
-    })),
-  ];
-
-  const requestOptions: OpenAI.Chat.ChatCompletionCreateParams = {
-    model,
-    messages: preparedMessages,
-    temperature,
-    max_tokens: maxTokens,
+  const payload: Record<string, unknown> = {
+    model: "gemini-2.5-flash",
+    messages: messages.map(normalizeMessage),
   };
 
   if (tools && tools.length > 0) {
-    requestOptions.tools = tools;
-    if (toolChoice) {
-      requestOptions.tool_choice = toolChoice;
-    }
+    payload.tools = tools;
   }
 
-  try {
-    const response = await openai.chat.completions.create(requestOptions);
-    const message = response.choices[0]?.message;
-
-    if (!message) {
-      throw new Error("No response from OpenAI");
-    }
-
-    return message.content || "";
-  } catch (error: any) {
-    console.error("[OpenAI] Completion error:", error);
-    throw new Error(`OpenAI API error: ${error.message}`);
+  const normalizedToolChoice = normalizeToolChoice(
+    toolChoice || tool_choice,
+    tools
+  );
+  if (normalizedToolChoice) {
+    payload.tool_choice = normalizedToolChoice;
   }
+
+  payload.max_tokens = 32768
+  payload.thinking = {
+    "budget_tokens": 128
+  }
+
+  const normalizedResponseFormat = normalizeResponseFormat({
+    responseFormat,
+    response_format,
+    outputSchema,
+    output_schema,
+  });
+
+  if (normalizedResponseFormat) {
+    payload.response_format = normalizedResponseFormat;
+  }
+
+  const response = await fetch(resolveApiUrl(), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${ENV.forgeApiKey}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
+    );
+  }
+
+  return (await response.json()) as InvokeResult;
 }
-
-// Chat completion with function calling support
-export async function createCompletionWithFunctions(
-  messages: LLMMessage[],
-  functions: Array<{
-    name: string;
-    description: string;
-    parameters: any;
-  }>,
-  options: CompletionOptions = {}
-): Promise<{ content: string; functionCall?: FunctionCallResult }> {
-  if (!openai) {
-    throw new Error("OpenAI API key not configured");
-  }
-
-  const {
-    model = LLM_MODEL,
-    temperature = 0.7,
-    maxTokens = 2000,
-    systemPrompt = DEFAULT_SYSTEM_PROMPT,
-  } = options;
-
-  // Prepare messages
-  const preparedMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-    { role: "system", content: systemPrompt },
-    ...messages.map((m) => ({
-      role: m.role as "user" | "assistant" | "system",
-      content: m.content,
-      name: m.name,
-      function_call: m.function_call,
-    })),
-  ];
-
-  try {
-    const response = await openai.chat.completions.create({
-      model,
-      messages: preparedMessages,
-      temperature,
-      max_tokens: maxTokens,
-      tools: functions.map((f) => ({
-        type: "function" as const,
-        function: {
-          name: f.name,
-          description: f.description,
-          parameters: f.parameters,
-        },
-      })),
-    });
-
-    const message = response.choices[0]?.message;
-
-    if (!message) {
-      throw new Error("No response from OpenAI");
-    }
-
-    // Handle function call
-    if (message.tool_calls && message.tool_calls.length > 0) {
-      const toolCall = message.tool_calls[0];
-      return {
-        content: message.content || "",
-        functionCall: {
-          functionName: toolCall.function.name,
-          arguments: JSON.parse(toolCall.function.arguments),
-        },
-      };
-    }
-
-    return { content: message.content || "" };
-  } catch (error: any) {
-    console.error("[OpenAI] Function calling error:", error);
-    throw new Error(`OpenAI API error: ${error.message}`);
-  }
-}
-
-// Transcription using Whisper
-export async function transcribeAudio(
-  audioBuffer: Buffer,
-  options: {
-    language?: string;
-    prompt?: string;
-  } = {}
-): Promise<TranscriptionResult> {
-  if (!openai) {
-    throw new Error("OpenAI API key not configured");
-  }
-
-  try {
-    const file = await openai.audio.transcriptions.create({
-      file: {
-        name: "audio.mp3",
-        data: audioBuffer,
-      } as any,
-      model: WHISPER_MODEL,
-      language: options.language,
-      prompt: options.prompt,
-    });
-
-    return {
-      text: file.text,
-      language: (file as any).language,
-    };
-  } catch (error: any) {
-    console.error("[OpenAI] Transcription error:", error);
-    throw new Error(`Transcription failed: ${error.message}`);
-  }
-}
-
-// Text-to-speech
-export async function textToSpeech(
-  text: string,
-  options: SpeechOptions = {}
-): Promise<Buffer> {
-  if (!openai) {
-    throw new Error("OpenAI API key not configured");
-  }
-
-  const {
-    voice = "alloy",
-    speed = 1.0,
-    model = TTS_MODEL,
-  } = options;
-
-  try {
-    const response = await openai.audio.speech.create({
-      model,
-      voice: voice as OpenAI.SpeechCreateParams["voice"],
-      input: text,
-      speed,
-    });
-
-    // Convert response to buffer
-    const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
-  } catch (error: any) {
-    console.error("[OpenAI] TTS error:", error);
-    throw new Error(`TTS failed: ${error.message}`);
-  }
-}
-
-// Get available models
-export function getAvailableModels(): string[] {
-  return [
-    "gpt-4o",
-    "gpt-4o-mini",
-    "gpt-4-turbo",
-    "gpt-4",
-    "gpt-3.5-turbo",
-  ];
-}
-
-// Create embedding for search
-export async function createEmbedding(text: string): Promise<number[]> {
-  if (!openai) {
-    throw new Error("OpenAI API key not configured");
-  }
-
-  try {
-    const response = await openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: text,
-    });
-
-    return response.data[0].embedding;
-  } catch (error: any) {
-    console.error("[OpenAI] Embedding error:", error);
-    throw new Error(`Embedding failed: ${error.message}`);
-  }
-}
-
-// Export OpenAI client for advanced usage
-export function getOpenAIClient(): OpenAI | null {
-  return openai;
-}
-
-export default {
-  isConfigured,
-  createCompletion,
-  createCompletionWithFunctions,
-  transcribeAudio,
-  textToSpeech,
-  getAvailableModels,
-  createEmbedding,
-  getOpenAIClient,
-  TTS_VOICES,
-};
