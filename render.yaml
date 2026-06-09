@@ -1,4 +1,3 @@
-# render.yaml - updated
 database:
   name: vs-crm-db
   plan: free
